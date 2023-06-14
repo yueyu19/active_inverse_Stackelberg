@@ -47,8 +47,8 @@ Qf = zeros(nf, nf, d);
 Rf = zeros(mf, mf, d);
 
 for k = 1:d
-    Qf(:, :, k) = eye(nf, nf); % follower's cost matrices under hypothesis n
-    Rf(:, :, k) = 1e-1*eye(mf, mf);
+    Qf(:, :, k) = diag([1; 1; 0; 0]); % follower's cost matrices under hypothesis n
+    Rf(:, :, k) = 1e-2*eye(mf, mf);
 end
 
 % memory allocation for leader matrices
@@ -108,13 +108,13 @@ end
 % system parameters
 
 maxccpiter = 10; % max # of rand seed in CCP
-maxrad = 10;
+maxrad = 5; % max box radius for reference state
 
 setD = nchoosek(1:d, 2); % set of hypo pairs
 
 
-x0 = zeros(nl, 1); % initilization of leader's state
-xi0 = zeros(nf, 1); % initialization of the follower's state mean
+x0 = kron(ones(d, 1), [0; 0; 0; 0]); % initilization of leader's state
+xi0 = [0; 0; 0; 0]; % initialization of the follower's state mean
 
 u_opt = zeros(ml, tau); % initialize optimal inputs for leader
 objval_opt = Inf; % initialize optimal value in CCP
@@ -124,7 +124,7 @@ for ccp_rand = 1:maxccpiter % random initialization of CCP (convex-concave proce
 
     w = x0 + maxrad*(2*rand(nl, 1)-1); % random reference point for leader
 
-    [r_hat, x_hat, q_hat, xi_hat] = dynprop(El, Fl, Ef, Ff, Ql, Qf, L, x0, xi0, w); % propagate the leader & follower's states & co-states
+    [ql_hat, xl_hat, qf_hat, xi_hat] = dynprop(El, Fl, Ef, Ff, Ql, Qf, L, x0, xi0, w); % propagate the leader & follower's states & co-states
 
     objval_hat = Inf; % initialize optimal value for CCP
 
@@ -136,20 +136,20 @@ for ccp_rand = 1:maxccpiter % random initialization of CCP (convex-concave proce
 
         yalmip('clear')
 
-        r = sdpvar(nl, tau+1, 'full'); % leader's costate
-        x = sdpvar(nl, tau+1, 'full'); % leader's state
+        ql = sdpvar(nl, tau+1, 'full'); % leader's costate
+        xl = sdpvar(nl, tau+1, 'full'); % leader's state
         w = sdpvar(nl, 1, 'full'); % leader's reference state
-        q = sdpvar(nf, tau+1, d,'full'); % hypothesis agent co-state
+        qf = sdpvar(nf, tau+1, d,'full'); % hypothesis agent co-state
         xi = sdpvar(nf, tau+1, d, 'full'); % hypothesis agent state
         s = sdpvar(Dn, 1, 'full'); % slack variable
         S = sdpvar(tau+1, Dn, 'full'); % slack variable
 
-        constr = [x(:, 1) == x0, ...    % initial condition for leader's state
-            r(:, tau+1) == -Ql*w]; % final condition for leader's co-state
+        constr = [xl(:, 1) == x0, ...    % initial condition for leader's state
+            ql(:, tau+1) == -Ql*w]; % final condition for leader's co-state
 
         for t = 1:tau
-            constr = [constr, x(:, t+1) == El(:, :, t)*x(:, t) - Fl(:, :, t)*r(:, t+1)]; % leader state dynamics
-            constr = [constr, r(:, t) == El(:, :, t)'*r(:, t+1) - Ql*w]; % leader co-state dynamics
+            constr = [constr, xl(:, t+1) == El(:, :, t)*xl(:, t) - Fl(:, :, t)*ql(:, t+1)]; % leader state dynamics
+            constr = [constr, ql(:, t) == El(:, :, t)'*ql(:, t+1) - Ql*w]; % leader co-state dynamics
         end
 
         for k = 1:d
@@ -158,11 +158,11 @@ for ccp_rand = 1:maxccpiter % random initialization of CCP (convex-concave proce
         end
 
         for k = 1:d
-            constr = [constr, q(:, tau+1, k) == -Qf(:, :, k)*L(:, :, k)*x(:, tau+1), ... % final condition for k-th follower co-state
+            constr = [constr, qf(:, tau+1, k) == -Qf(:, :, k)*L(:, :, k)*xl(:, tau+1), ... % final condition for k-th follower co-state
                 xi(:, 1, k) == xi0]; % initial condition for k-th follower state
             for t = 1:tau
-                constr = [constr, q(:, t, k) == Ef(:, :, t, k)'*q(:, t+1, k)-Qf(:, :, k)*L(:, :, k)*x(:, t)]; % k-th follower's co-state dynamics
-                constr = [constr, xi(:, t+1, k) == Ef(:, :, t, k)*xi(:, t, k) - Ff(:, :, t, k)*q(:, t+1, k)]; % k-th follower's state dynamics
+                constr = [constr, qf(:, t, k) == Ef(:, :, t, k)'*qf(:, t+1, k)-Qf(:, :, k)*L(:, :, k)*xl(:, t)]; % k-th follower's co-state dynamics
+                constr = [constr, xi(:, t+1, k) == Ef(:, :, t, k)*xi(:, t, k) - Ff(:, :, t, k)*qf(:, t+1, k)]; % k-th follower's state dynamics
             end
         end
 
@@ -212,23 +212,31 @@ for ccp_rand = 1:maxccpiter % random initialization of CCP (convex-concave proce
     end
 end
 
-[r_opt, x_opt, q_opt, xi_opt] = dynprop(El, Fl, Ef, Ff, Ql, Qf, L, x0, xi0, w_opt);
+[ql_opt, xl_opt, qf_opt, xi_opt] = dynprop(El, Fl, Ef, Ff, Ql, Qf, L, x0, xi0, w_opt);
 
+%%
 figure('Position',[0,0,800,800])
 hold on
 
 for k = 1:d
     num = (k-1)*n0;
-    plot(x_opt(num+1, :), x_opt(num+2, :), '-square', 'LineWidth', 3)
-    scatter(x_opt(num+1, end), x_opt(num+2, end), 300, 'k>', 'filled')
+    plot(xl_opt(num+1, :), xl_opt(num+2, :), '-square', 'LineWidth', 3)
+    scatter(xl_opt(num+1, end), xl_opt(num+2, end), 300, 'k>', 'filled')
+end
+scatter(xl_opt(1, 1), xl_opt(2, 1), 300, 'ko', 'filled')
+hold off
+
+figure('Position',[0,0,800,800])
+hold on
+for k = 1:d
+    plot(xi_opt(1, :, k), xi_opt(2, :, k), '--o', 'LineWidth', 3)
+    scatter(xi_opt(1, end, k), xi_opt(2, end, k), 300, 'k>', 'filled')
+    scatter(xi_opt(1, 1, k), xi_opt(2, 1, k), 300, 'ko', 'filled')
 end
 
-scatter(x_opt(1, 1), x_opt(2, 1), 300, 'ko', 'filled')
-
 hold off
-set(gca,'Yticklabel',[]) 
-set(gca,'Xticklabel',[])
+% set(gca,'Yticklabel',[]) 
+% set(gca,'Xticklabel',[])
 %axis equal
-
 
 
