@@ -33,7 +33,7 @@ function solve(;
 
         # CCP iteration
         for ccp_iter = 1:p.ccp_maxiter 
-            model = Model(Mosek.Optimizer)
+            model = Model(Ipopt.Optimizer)
 
             @variables(model, begin
                 ql[1:nl, 1:tau+1]       # leader's costate
@@ -63,10 +63,11 @@ function solve(;
             # reference state constraints
             for k = 1:d
                 num = (k-1)*n0
-                @constraint(model,
+                @constraints(model, begin
                     #norm(w[num+1:num+2] - x0[num+1:num+2], Inf) <= p.maxrad
-                    (w[num+1] - x0[num+1])^2 + (w[num+2] - x0[num+2])^2 <= p.maxrad^2
-                )
+                    (w[num+1] - x0[num+1])^2 <= p.maxrad 
+                    (w[num+2] - x0[num+2])^2 <= p.maxrad
+                end)
                 @constraint(model, w[num+3:num+4] == [0, 0])
             end
 
@@ -110,6 +111,15 @@ function solve(;
                     end
                 end
             end
+
+            @NLobjective(model, Min, 
+                log(sum(
+                    exp(s[i])
+                    for i = 1:Dn
+                )) - objf1
+            )
+
+            optimize!(model)
         end
     end
 end

@@ -5,6 +5,7 @@ using QuadGK: quadgk
 using Combinatorics: combinations
 using JuMP
 using MosekTools
+using Ipopt
 
 include("params.jl")
 include("dynamics.jl")
