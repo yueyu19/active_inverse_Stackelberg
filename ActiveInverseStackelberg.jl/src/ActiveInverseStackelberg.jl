@@ -2,6 +2,9 @@ module ActiveInverseStackelberg
 
 using LinearAlgebra: I, kron, diagm, pinv
 using QuadGK: quadgk
+using Combinatorics: combinations
+using JuMP
+using MosekTools
 
 include("params.jl")
 include("dynamics.jl")
