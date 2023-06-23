@@ -3,10 +3,6 @@ function solve(;
     cost::Cost,
     p::Parameters
 )
-    # extract dimensions
-
-
-
-
-    τ = Integer(round(1/p.dt))     # length of trajectory
+    Pl, El, Fl, Pf, Ef, Ff, Lambda, Lambdainv, L = dynamic_programming(dyn, cost, p)
+    
 end

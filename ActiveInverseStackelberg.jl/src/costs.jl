@@ -1,19 +1,23 @@
 struct Cost
-    Ql::Matrix{<:Real}  # leader cost matrices
-    Rl::Matrix{<:Real}
-    Qf::Matrix{<:Real}  # follower cost matrices
-    Rf::Matrix{<:Real}
+    Ql::Array{<:Real, 2}    # leader cost matrices
+    Rl::Array{<:Real, 2}
+    Qf::Array{<:Real, 3}    # follower cost matrices
+    Rf::Array{<:Real, 3}
 end
 
-function di_costs(d, ml, mf, nf)
+function di_cost(p::Parameters, dyn::Dynamics)
+    d = p.d
+    ml = size(dyn.Bl,2)
+    nf, mf = size(dyn.Bf)
+    
     Ql = kron(diagm(ones(d)), diagm([1, 1, 0, 0]))
-    rl = 1e-1*I
+    Rl = 1e-1*diagm(ones(ml))
     
     Qf = zeros(nf, nf, d)
     Rf = zeros(mf, mf, d)
     for k = 1:d
         Qf[:, :, k] =  diagm([1; 1; 0; 0])
-        Rf[:, :, k] = 1e-2*I
+        Rf[:, :, k] = 1e-2*diagm(ones(mf))
     end
-    return Cost(Ql, rl, Qf, Rf)
+    return Cost(Ql, Rl, Qf, Rf)
 end

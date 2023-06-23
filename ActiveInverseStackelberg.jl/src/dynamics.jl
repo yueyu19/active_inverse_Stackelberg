@@ -7,13 +7,13 @@ struct Dynamics
     Bf::Matrix{<:Real}
 end
 
+"""Creates the dynamics for p.d leader subsystems and 1 follower, all with
+identical LTI dynamics specified by Ac0 and Bc0."""
 function Dynamics(Ac0, Bc0, p::Parameters)
     # FOH discretization (LTI systems only)
     A0 = exp(p.dt*Ac0)
     integral, _ = quadgk(t -> exp(t*Ac0), 0, p.dt)
     B0 = integral*Bc0
-    display(A0)
-    display(B0)
     
     Al = kron(diagm(ones(p.d)), A0)
     Bl = kron(diagm(ones(p.d)), B0)
@@ -25,6 +25,7 @@ function Dynamics(Ac0, Bc0, p::Parameters)
     return Dynamics(Ac0, Bc0, Al, Bl, Af, Bf)
 end
 
+"""Creates the dynamics the double-integrator experiment"""
 function di_dynamics(p::Parameters)
     # double-integrator agent dynamics
     Ac0 = [
