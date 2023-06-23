@@ -1,6 +1,6 @@
 module ActiveInverseStackelberg
 
-using LinearAlgebra: I, kron, diagm, pinv
+using LinearAlgebra: I, kron, diagm, pinv, norm
 using QuadGK: quadgk
 using Combinatorics: combinations
 using JuMP
