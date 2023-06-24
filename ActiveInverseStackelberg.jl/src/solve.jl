@@ -18,6 +18,8 @@ function solve(;
 
     u_opt = zeros(ml, tau)      # initialize optimal inputs for leader
     objval_opt = Inf            # initialize optimal value in CCP
+    objval = Inf                
+    w_opt = Inf
 
     # random initialization of CCP (convex-concave procedure)
     for ccp_rand = 1:p.maxccpiter 
@@ -33,7 +35,10 @@ function solve(;
 
         # CCP iteration
         for ccp_iter = 1:p.ccp_maxiter 
-            model = Model(MosekTools.Optimizer)
+            # model = Model(MosekTools.Optimizer)
+            model = Model(Ipopt.Optimizer)
+            set_optimizer_attribute(model, "max_iter", 20)
+            set_optimizer_attribute(model, "print_level", 1)
 
             @variables(model, begin
                 ql[1:nl, 1:tau+1]       # leader's costate
@@ -117,6 +122,36 @@ function solve(;
             )
 
             optimize!(model)
+
+            objval1 = vol(value.(xi), Lambdainv)
+            objval = max(value.(ups)) - objval1
+
+            println("Sample $(ccp_rand), CCP iter $(ccp_iter), Value $(-objval)")
+
+            if objval_hat - objval < p.ccp_eps
+                break
+            else
+                objval_hat = objval
+            end
+        end
+        if objval < objval_opt
+            w_opt = value.(w)
+            objval_opt = objval
         end
     end
+    ql_opt, xl_opt, qf_opt, xi_opt = dynprop(El, Fl, Ef, Ff, cost.Ql, cost.Qf, L, x0, xi0, w_opt)
+end
+
+function vol(xi, W)
+    (_, tau1, N) = size(xi)
+
+    f = 0
+    for t = 1:tau1
+        for k1 = 1:N
+            for k2 = k1+1:N
+                f += (xi[:,t,k1] - xi[:,t,k2])'*(W[:,:,t,k1] + W[:,:,t,k2])*(xi[:,t,k1] - xi[:,t,k2])
+            end
+        end
+    end
+    return f
 end
