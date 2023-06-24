@@ -7,7 +7,7 @@ function dynamic_programming(
     nl, ml = size(dyn.Bl)
     nf, mf = size(dyn.Bf)
 
-    tau = Integer(round(1/p.dt))     # length of trajectory
+    tau = Integer(round(p.T/p.dt))     # length of trajectory
 
     # memory dyn.Allocation for leader matrices
     Pl = zeros(nl, nl, tau+1)
@@ -52,7 +52,8 @@ function dynamic_programming(
         for k = 1:p.d
             # propogate the follower's state var under hypo k
             Lambda[:,:,t+1,k] = Ef[:,:,t,k]*Lambda[:,:,t,k]*Ef[:,:,t,k]' + Ff[:,:,t,k]
-            Lambdainv[:,:,t+1,k] = pinv(Lambda[:,:,t+1,k])
+            Lambdainvtemp = pinv(Lambda[:,:,t+1,k])
+            Lambdainv[:,:,t+1,k] = 0.5*(Lambdainvtemp + Lambdainvtemp')
         end
     end
 

@@ -1,6 +1,7 @@
 Base.@kwdef struct Parameters
     d::Int          # number of subsystems in leader's system
     dt::Real        # discretization step size
+    T::Real         # time horizon (total duration of the game)
     maxccpiter::Int # max # of rand seed in CCP
     maxrad::Int     # max box radius for reference state
     ccp_maxiter::Int    # max iteration of CCP
@@ -9,10 +10,11 @@ end
 
 """Creates the parameters for the double-integrator experiment"""
 di_params() = Parameters(;
-    d = 3,
+    d = 6,
     dt = 0.2,
+    T = 2,
     maxccpiter = 10,
-    maxrad = 5,
+    maxrad = 10,
     ccp_maxiter = 10,
     ccp_eps = 1e-4
 )

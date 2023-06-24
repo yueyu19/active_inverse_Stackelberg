@@ -8,7 +8,7 @@ function solve(;
     n0 = size(dyn.Ac0,1)
     nl, ml = size(dyn.Bl)
     nf, mf = size(dyn.Bf)
-    tau = Integer(round(1/p.dt))            # length of trajectory
+    tau = Integer(round(p.T/p.dt))            # length of trajectory
     setD = collect(combinations(1:p.d, 2))  # set of hypo pairs
     Dn = size(setD, 1)
     d = p.d
@@ -33,7 +33,7 @@ function solve(;
 
         # CCP iteration
         for ccp_iter = 1:p.ccp_maxiter 
-            model = Model(Ipopt.Optimizer)
+            model = Model(MosekTools.Optimizer)
 
             @variables(model, begin
                 ql[1:nl, 1:tau+1]       # leader's costate
@@ -41,8 +41,8 @@ function solve(;
                 w[1:nl]                 # leader's reference state
                 qf[1:nf, 1:tau+1, 1:d]  # hypothesis agent co-state
                 xi[1:nf, 1:tau+1, 1:d]  # hypothesis agent state
-                s[1:Dn]                 # slack variable
                 S[1:tau+1, 1:Dn]        # slack variable
+                ups                     # upper bound for sum of quadratics
             end)
 
             @constraints(model, begin
@@ -65,8 +65,8 @@ function solve(;
                 num = (k-1)*n0
                 @constraints(model, begin
                     #norm(w[num+1:num+2] - x0[num+1:num+2], Inf) <= p.maxrad
-                    (w[num+1] - x0[num+1])^2 <= p.maxrad 
-                    (w[num+2] - x0[num+2])^2 <= p.maxrad
+                    (w[num+1] - x0[num+1])^2 <= p.maxrad^2
+                    (w[num+2] - x0[num+2])^2 <= p.maxrad^2
                 end)
                 @constraint(model, w[num+3:num+4] == [0, 0])
             end
@@ -99,7 +99,7 @@ function solve(;
                     @constraint(model, (xi[:,t,k1] - xi[:,t,k2])'*(Lambdainv[:,:,t,k1]
                         + Lambdainv[:,:,t,k2])*(xi[:,t,k1] - xi[:,t,k2]) <= S[t,ind])
                 end
-                @constraint(model, sum(sum(S)) - sum(S[:,ind]) == s[ind])
+                @constraint(model, sum(sum(S)) - sum(S[:, ind]) <= ups)
             end
 
             objf1 = 0;
@@ -112,11 +112,8 @@ function solve(;
                 end
             end
 
-            @NLobjective(model, Min, 
-                log(sum(
-                    exp(s[i])
-                    for i = 1:Dn
-                )) - objf1
+            @objective(model, Min, 
+                ups - objf1
             )
 
             optimize!(model)
