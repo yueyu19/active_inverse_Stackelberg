@@ -21,12 +21,12 @@ Bc0 = [0, 0;
 dt = 0.2; % discretization step size
 
 A0 = expm(dt*Ac0); % FOH discretization
-B0 = integral(@(t) expm(t*Ac0), 0, dt, 'ArrayValued', true)*Bc0;
+B0 = integral(@(t) A0*t, 0, dt, 'ArrayValued', true)*Bc0;
 
-tau = round(1/dt); % length of trajectory
+tau = round(2/dt); % length of trajectory
 
 % leader dynamics
-d = 3; % number of subsystems in leader's system
+d = 6; % number of subsystems in leader's system
 
 Al = kron(eye(d), A0); % the joint dynamics of d double-integrator agents
 Bl = kron(eye(d), B0);
@@ -108,7 +108,7 @@ end
 % system parameters
 
 maxccpiter = 10; % max # of rand seed in CCP
-maxrad = 5; % max box radius for reference state
+maxrad = 10; % max box radius for reference state
 
 setD = nchoosek(1:d, 2); % set of hypo pairs
 
@@ -141,8 +141,8 @@ for ccp_rand = 1:maxccpiter % random initialization of CCP (convex-concave proce
         w = sdpvar(nl, 1, 'full'); % leader's reference state
         qf = sdpvar(nf, tau+1, d,'full'); % hypothesis agent co-state
         xi = sdpvar(nf, tau+1, d, 'full'); % hypothesis agent state
-        s = sdpvar(Dn, 1, 'full'); % slack variable
         S = sdpvar(tau+1, Dn, 'full'); % slack variable
+        ups = sdpvar(1, 1, 'full'); % upper bound for sum of quadratics
 
         constr = [xl(:, 1) == x0, ...    % initial condition for leader's state
             ql(:, tau+1) == -Ql*w]; % final condition for leader's co-state
@@ -173,7 +173,8 @@ for ccp_rand = 1:maxccpiter % random initialization of CCP (convex-concave proce
                 constr = [constr, (xi(:, t, k1) - xi(:, t, k2))'*(Lambdainv(:, :, t, k1)+Lambdainv(:, :, t, k2))*(xi(:, t, k1) - xi(:, t, k2)) <= S(t, ind)];
                 % upper bound quadratics
             end
-            constr = [constr, sum(sum(S)) - sum(S(:, ind)) == s(ind)];
+            constr = [constr, sum(sum(S)) - sum(S(:, ind)) <= ups];  % upper bound sum of quadratics
+   
         end
 
         objf1 = 0;
@@ -189,14 +190,13 @@ for ccp_rand = 1:maxccpiter % random initialization of CCP (convex-concave proce
 
         options = sdpsettings('verbose',0,'solver','mosek');
 
-        solution = optimize(constr, logsumexp(s) - objf1, options);
+        solution = optimize(constr, ups - objf1, options);
        
-        
         objval1 = vol(value(xi), Lambdainv);
-        s_opt = value(s); % use log-sum-exp trick to prevent numerical blow up
-        objval = max(s_opt) + log(sum(exp(s_opt-max(s_opt)))) - objval1; 
+        objval = max(value(ups)) - objval1; 
 
-        fprintf('Sample %d, CCP iter %d, Value %4.2f \n', ccp_rand, ccp_iter, objval)
+
+        fprintf('Sample %d, CCP iter %d, Value %4.2f \n', ccp_rand, ccp_iter, -objval)
 
         if objval_hat-objval < ccp_eps
             break
@@ -238,5 +238,4 @@ hold off
 % set(gca,'Yticklabel',[]) 
 % set(gca,'Xticklabel',[])
 %axis equal
-
 
