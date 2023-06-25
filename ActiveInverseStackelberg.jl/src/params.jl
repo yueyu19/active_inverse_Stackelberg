@@ -1,6 +1,6 @@
 """Creates the parameters for the double-integrator experiment"""
 di_params() = Parameters(;
-    d = 6,
+    d = 3,
     dt = 0.2,
     T = 2,
     maxccpiter = 10,

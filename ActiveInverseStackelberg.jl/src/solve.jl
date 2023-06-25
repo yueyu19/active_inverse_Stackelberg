@@ -35,10 +35,8 @@ function solve(problem::ActiveInverseStackelbergProblem)
 
         # CCP iteration
         for ccp_iter = 1:p.ccp_maxiter 
-            # model = Model(MosekTools.Optimizer)
-            model = Model(Ipopt.Optimizer)
-            set_optimizer_attribute(model, "max_iter", 20)
-            set_optimizer_attribute(model, "print_level", 1)
+            model = Model(MosekTools.Optimizer)
+            set_silent(model)
 
             @variables(model, begin
                 ql[1:nl, 1:tau+1]       # leader's costate
@@ -46,6 +44,7 @@ function solve(problem::ActiveInverseStackelbergProblem)
                 w[1:nl]                 # leader's reference state
                 qf[1:nf, 1:tau+1, 1:d]  # hypothesis agent co-state
                 xi[1:nf, 1:tau+1, 1:d]  # hypothesis agent state
+                eta[1:nf, 1:tau+1, 1:Dn]    # auxiliary variable for quadratic constraints
                 S[1:tau+1, 1:Dn]        # slack variable
                 ups                     # upper bound for sum of quadratics
             end)
@@ -101,14 +100,10 @@ function solve(problem::ActiveInverseStackelbergProblem)
                     k1 = setD[ind][1]
                     k2 = setD[ind][2]
                     # upper bound quadratics
-                    li_temp = Lambdainv[:,:,t,k1] + Lambdainv[:,:,t,k2]
-                    li = (li_temp + li_temp')/2
-                    # li = diagm([1,1,1,1])
-                    if !isposdef(li)
-                        @warn "Lambdainv not positive definite"
-                    end
-                    # display((xi[:,t,k1] - xi[:,t,k2])'*(li)*(xi[:,t,k1] - xi[:,t,k2]))
-                    @constraint(model, (xi[:,t,k1] - xi[:,t,k2])'*(li)*(xi[:,t,k1] - xi[:,t,k2]) <= S[t,ind])
+                    @constraint(model, 
+                        eta[:,t,ind] == (sqrt(Lambdainv[:,:,t,k1] + Lambdainv[:,:,t,k2])
+                                        *(xi[:,t,k1] - xi[:,t,k2])))
+                    @constraint(model, eta[:,t,ind]'*eta[:,t,ind] <= S[t,ind])
                 end
                 @constraint(model, sum(sum(S)) - sum(S[:, ind]) <= ups)
             end
