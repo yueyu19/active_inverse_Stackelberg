@@ -21,7 +21,7 @@ Bc0 = [0, 0;
 dt = 0.2; % discretization step size
 
 A0 = expm(dt*Ac0); % FOH discretization
-B0 = integral(@(t) A0*t, 0, dt, 'ArrayValued', true)*Bc0;
+B0 = integral(@(t) expm(t*Ac0), 0, dt, 'ArrayValued', true)*Bc0;
 
 tau = round(2/dt); % length of trajectory
 
