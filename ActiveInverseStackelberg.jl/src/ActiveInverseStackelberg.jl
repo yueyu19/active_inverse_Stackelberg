@@ -1,12 +1,12 @@
 module ActiveInverseStackelberg
 
-using LinearAlgebra: I, kron, diagm, pinv, norm, isposdef, eigvals, cholesky
+using LinearAlgebra: I, kron, diagm, pinv, norm
 using QuadGK: quadgk
 using Combinatorics: combinations
 using JuMP
 using MosekTools
 using Ipopt
-using CairoMakie: Figure, Axis, lines!
+using CairoMakie: Figure, Axis, lines!, scatter!
 
 include("types.jl")
 include("params.jl")
