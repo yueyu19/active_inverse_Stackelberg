@@ -21,12 +21,12 @@ Bc0 = [0, 0;
 dt = 0.2; % discretization step size
 
 A0 = expm(dt*Ac0); % FOH discretization
-B0 = integral(@(t) A0*t, 0, dt, 'ArrayValued', true)*Bc0;
+B0 = integral(@(t) expm(t*Ac0), 0, dt, 'ArrayValued', true)*Bc0;
 
 tau = round(2/dt); % length of trajectory
 
 % leader dynamics
-d = 6; % number of subsystems in leader's system
+d = 3; % number of subsystems in leader's system
 
 Al = kron(eye(d), A0); % the joint dynamics of d double-integrator agents
 Bl = kron(eye(d), B0);
@@ -141,6 +141,7 @@ for ccp_rand = 1:maxccpiter % random initialization of CCP (convex-concave proce
         w = sdpvar(nl, 1, 'full'); % leader's reference state
         qf = sdpvar(nf, tau+1, d,'full'); % hypothesis agent co-state
         xi = sdpvar(nf, tau+1, d, 'full'); % hypothesis agent state
+        eta = sdpvar(nf, tau+1, Dn, 'full'); % auxiliary variable for quadratic constraints
         S = sdpvar(tau+1, Dn, 'full'); % slack variable
         ups = sdpvar(1, 1, 'full'); % upper bound for sum of quadratics
 
@@ -170,8 +171,9 @@ for ccp_rand = 1:maxccpiter % random initialization of CCP (convex-concave proce
             for t = 1:tau+1
                 k1 = setD(ind, 1);
                 k2 = setD(ind, 2);
-                constr = [constr, (xi(:, t, k1) - xi(:, t, k2))'*(Lambdainv(:, :, t, k1)+Lambdainv(:, :, t, k2))*(xi(:, t, k1) - xi(:, t, k2)) <= S(t, ind)];
-                % upper bound quadratics
+%                 constr = [constr, (xi(:, t, k1) - xi(:, t, k2))'*(Lambdainv(:, :, t, k1)+Lambdainv(:, :, t, k2))*(xi(:, t, k1) - xi(:, t, k2)) <= S(t, ind)];
+                constr = [constr, eta(:, t, ind) == sqrtm(Lambdainv(:, :, t, k1)+Lambdainv(:, :, t, k2))*(xi(:, t, k1) - xi(:, t, k2))];
+                constr = [constr, eta(:, t, ind)'*eta(:, t, ind) <= S(t, ind)]; % upper bound quadratics
             end
             constr = [constr, sum(sum(S)) - sum(S(:, ind)) <= ups];  % upper bound sum of quadratics
    
@@ -238,4 +240,3 @@ hold off
 % set(gca,'Yticklabel',[]) 
 % set(gca,'Xticklabel',[])
 %axis equal
-
