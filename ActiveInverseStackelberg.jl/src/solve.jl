@@ -1,8 +1,8 @@
-function solve(;
-    dyn::Dynamics,
-    cost::Cost,
-    p::Parameters
-)
+function solve(problem::ActiveInverseStackelbergProblem)
+    dyn = problem.dynamics
+    cost = problem.cost
+    p = problem.parameters
+    
     Pl, El, Fl, Pf, Ef, Ff, Lambda, Lambdainv, L = dynamic_programming(dyn, cost, p)
 
     n0 = size(dyn.Ac0,1)
@@ -101,8 +101,14 @@ function solve(;
                     k1 = setD[ind][1]
                     k2 = setD[ind][2]
                     # upper bound quadratics
-                    @constraint(model, (xi[:,t,k1] - xi[:,t,k2])'*(Lambdainv[:,:,t,k1]
-                        + Lambdainv[:,:,t,k2])*(xi[:,t,k1] - xi[:,t,k2]) <= S[t,ind])
+                    li_temp = Lambdainv[:,:,t,k1] + Lambdainv[:,:,t,k2]
+                    li = (li_temp + li_temp')/2
+                    # li = diagm([1,1,1,1])
+                    if !isposdef(li)
+                        @warn "Lambdainv not positive definite"
+                    end
+                    # display((xi[:,t,k1] - xi[:,t,k2])'*(li)*(xi[:,t,k1] - xi[:,t,k2]))
+                    @constraint(model, (xi[:,t,k1] - xi[:,t,k2])'*(li)*(xi[:,t,k1] - xi[:,t,k2]) <= S[t,ind])
                 end
                 @constraint(model, sum(sum(S)) - sum(S[:, ind]) <= ups)
             end
@@ -140,6 +146,7 @@ function solve(;
         end
     end
     ql_opt, xl_opt, qf_opt, xi_opt = dynprop(El, Fl, Ef, Ff, cost.Ql, cost.Qf, L, x0, xi0, w_opt)
+    return xl_opt, xi_opt
 end
 
 function vol(xi, W)

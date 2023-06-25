@@ -1,12 +1,3 @@
-struct Dynamics
-    Ac0::Matrix{<:Real}
-    Bc0::Matrix{<:Real}
-    Al::Matrix{<:Real}
-    Bl::Matrix{<:Real}
-    Af::Matrix{<:Real}
-    Bf::Matrix{<:Real}
-end
-
 """Creates the dynamics for p.d leader subsystems and 1 follower, all with
 identical LTI dynamics specified by Ac0 and Bc0."""
 function Dynamics(Ac0, Bc0, p::Parameters)

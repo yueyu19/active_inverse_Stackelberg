@@ -1,10 +1,3 @@
-struct Cost
-    Ql::Array{<:Real, 2}    # leader cost matrices
-    Rl::Array{<:Real, 2}
-    Qf::Array{<:Real, 3}    # follower cost matrices
-    Rf::Array{<:Real, 3}
-end
-
 function di_cost(p::Parameters, dyn::Dynamics)
     d = p.d
     ml = size(dyn.Bl,2)
