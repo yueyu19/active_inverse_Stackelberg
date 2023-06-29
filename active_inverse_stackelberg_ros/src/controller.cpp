@@ -33,24 +33,17 @@ class Controller
     {
       ROS_INFO_STREAM("Starting controller");
 
-      // Get parameters from the parameter server (which was probably configured
-      // in the launch file that started this node) and assign this values to
-      // member variables
       nh_.getParam("controller/cycle_rate", cycle_rate_);
       nh_.getParam("controller/Kx", Kx_);
       nh_.getParam("controller/Ky", Ky_);
-      nh_.getParam("controller/Kv", Kv_);
-      nh_.getParam("controller/Ktheta", Ktheta_);
+      nh_.getParam("controller/Kphi", Ktheta_);
 
       const auto queue_size = 100;
-      throttle_pub_ = nh_.advertise<std_msgs::Float32>("jetracer/throttle", queue_size);
-      steering_pub_ = nh_.advertise<std_msgs::Float32>("jetracer/steering", queue_size);
-      data_pub_ = nh_.advertise<jetracer_racing_ros_msgs::RolloutData>("rollout_data", queue_size);
-
-      start_time_sub_ = nh_.subscribe("start_time", queue_size, &Controller::startTimeCallback, this);
+      cmd_pub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", queue_size);
+      data_pub_ = nh_.advertise<bootcamp_07_msgs::RolloutData>("rollout_data", queue_size);
       setpoint_sub_ = nh_.subscribe("setpoint", queue_size, &Controller::setpointCallback, this);
-      pose_sub_ = nh_.subscribe("vrpn_client_node/jetracer/pose", queue_size, &Controller::poseCallback, this);
-      twist_sub_ = nh_.subscribe("vrpn_client_node/jetracer/twist", queue_size, &Controller::twistCallback, this);
+      pose_sub_ = nh_.subscribe("vrpn_client_node/turtlebot/pose", queue_size, &Controller::poseCallback, this);
+      start_time_sub_ = nh_.subscribe("start_time", queue_size, &Controller::startTimeCallback, this);
     }
 
     double cycle_rate(){return cycle_rate_;}
@@ -88,7 +81,8 @@ class Controller
 
       double u_x = xdot_d_ - Kx_*(x_ - x_d_);
       double u_y = ydot_d_ - Ky_*(y_ - y_d_);
-      double v_des = sqrt(u_x*u_x + u_y*u_y);
+      double v = sqrt(u_x*u_x + u_y*u_y);
+      v = clamp(v, -0.22, 0.22);
 
       double theta_d;
       theta_d = atan2(u_y, u_x);
@@ -98,10 +92,10 @@ class Controller
       else if (abs(theta_ - theta_d) > abs(theta_ - (theta_d - 2*PI)))
         theta_d -= 2*PI;
       
-      double throttle =  clamp(Kv_*(v_des - v_), 0.0, 1.0);
-      double steering = clamp(Ktheta_*(theta_d - theta_), -1.0, 1.0);
-      std::vector<double> command{throttle, steering};
+      double omega = -Ktheta_*(theta_-theta_d); 
+      omega = clamp(omega, -2.84, 2.84);
 
+      std::vector<double> command{v, omega};
       saveData(command);
       publishCommand(command);
 
@@ -109,21 +103,20 @@ class Controller
     }
 
   private:
+
     ros::NodeHandle nh_;
-    ros::Publisher throttle_pub_;
-    ros::Publisher steering_pub_;
+    ros::Publisher cmd_pub_;
     ros::Publisher data_pub_;
     ros::Subscriber setpoint_sub_;
     ros::Subscriber pose_sub_;
-    ros::Subscriber twist_sub_;
     ros::Subscriber start_time_sub_;
     ros::Time start_time_;
 
     double cycle_rate_;
-    double Kx_, Ky_, Kv_, Ktheta_;
+    double Kx_, Ky_, Ktheta_;
     bool started_, control_lock_;
 
-    double x_, y_, v_, theta_;
+    double x_, y_, theta_;
     double x_d_, y_d_, xdot_d_, ydot_d_;
     std::vector<double> ts_;
     std::vector<std::vector<double>> xs_, xds_, us_;
@@ -134,11 +127,10 @@ class Controller
     void stop_robot()
     {
       started_ = false;
-
       std::vector<double> stop_cmd{0.0, 0.0};
       publishCommand(stop_cmd);
-
       ROS_INFO_STREAM("Robot stopped");
+
     }
 
     void startTimeCallback(std_msgs::Time time)
@@ -152,6 +144,8 @@ class Controller
       }
       else
       {
+        publishRolloutData();
+        ROS_INFO_STREAM("Rollout data published");
         stop_robot();
       }
     }
@@ -176,15 +170,6 @@ class Controller
       theta_ = headingAngle(pose);
     }
 
-    void twistCallback(geometry_msgs::TwistStamped twist)
-    {
-      if (control_lock_)
-        return;
-      double xdot = twist.twist.linear.x;
-      double ydot = twist.twist.linear.y;
-      v_ = sqrt(pow(xdot, 2.0) + pow(ydot, 2.0));
-    }
-
     // Takes a geometry_msgs/PoseStamped message, converts the orientation to
     // roll/pitch/yaw, and returns the yaw angle. The yaw angle is angle about
     // the veritcal z-axis.
@@ -204,7 +189,7 @@ class Controller
     void saveData(std::vector<double> command)
     {
       ts_.push_back((ros::Time::now() - start_time_).toSec());
-      xs_.push_back({x_, y_, v_, theta_});
+      xs_.push_back({x_, y_, theta_});
       xds_.push_back({x_d_, xdot_d_, y_d_, ydot_d_});
       us_.push_back({command});
     }
@@ -212,26 +197,37 @@ class Controller
     // Publishes the command to cmd_vel
     void publishCommand(std::vector<double> command)
     {
-      std_msgs::Float32 t, s;
-      t.data = command[0];
-      s.data = command[1];
-      throttle_pub_.publish(t);
-      steering_pub_.publish(s);
+      geometry_msgs::Twist msg;
+      msg.linear.x = command[0];
+      msg.angular.z = command[1];
+      cmd_pub_.publish(msg);
     }
 
     // Publishes all saved data for the rollout
     void publishRolloutData()
     {
-      jetracer_racing_ros_msgs::RolloutData msg;
+      bootcamp_07_msgs::RolloutData msg;
       msg.ts = ts_;
       std::vector<std_msgs::Float64MultiArray> xs;
+      std::vector<std_msgs::Float64MultiArray> xds;
+      std::vector<std_msgs::Float64MultiArray> us;
       for (int i = 0; i < ts_.size(); i++)
       {
         std_msgs::Float64MultiArray x_msg;
         x_msg.data = xs_[i];
         xs.push_back(x_msg);
+
+        std_msgs::Float64MultiArray xd_msg;
+        xd_msg.data = xds_[i];
+        xds.push_back(xd_msg);
+
+        std_msgs::Float64MultiArray u_msg;
+        u_msg.data = us_[i];
+        us.push_back(u_msg);
       }
       msg.xs = xs;
+      msg.xds = xds;
+      msg.us = us;
       data_pub_.publish(msg);
     }
 
