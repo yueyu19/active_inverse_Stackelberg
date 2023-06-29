@@ -4,8 +4,8 @@ project(active_inverse_stackelberg_ros)
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
 	std_msgs
-	# jetracer_racing_ros_msgs
-	# ros_sockets
+	ros_sockets_msgs
+	ros_sockets
 )
 
 catkin_package(
@@ -17,13 +17,13 @@ include_directories(
 	${catkin_INCLUDE_DIRS}
 )
 
-add_executable(trajectory_generator
-	src/trajectory_generator.cpp
-)
-target_link_libraries(
-	trajectory_generator
-	${catkin_LIBRARIES}
-)
+# add_executable(trajectory_generator
+# 	src/trajectory_generator.cpp
+# )
+# target_link_libraries(
+# 	trajectory_generator
+# 	${catkin_LIBRARIES}
+# )
 
 add_executable(controller
 	src/controller.cpp
@@ -34,16 +34,7 @@ target_link_libraries(
 	${catkin_LIBRARIES}
 )
 
-add_executable(rollout_data
-	src/rollout_data.cpp
-	src/rollout_data_server.cpp
-)
-target_link_libraries(
-	rollout_data
-	${catkin_LIBRARIES}
-)
-
-install(TARGETS trajectory_generator controller rollout_data
+install(TARGETS controller # trajectory_generator
   	ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   	LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   	RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

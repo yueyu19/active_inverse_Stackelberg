@@ -13,7 +13,7 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/TwistStamped.h"
 #include "std_msgs/Float32.h"
-#include "jetracer_racing_ros_msgs/RolloutData.h"
+#include "ros_sockets_msgs/RolloutData.h"
 #include <tf/transform_datatypes.h>
 
 // Flag for whether shutdown is requested
@@ -29,7 +29,7 @@ void sigIntHandler(int sig)
 class Controller
 {
   public:
-    Controller() : control_lock_(false), started_(false), Kx_(0.0), Ky_(0.0), Kv_(0.0), Ktheta_(0.0)
+    Controller() : control_lock_(false), started_(false), Kx_(0.0), Ky_(0.0), Ktheta_(0.0)
     {
       ROS_INFO_STREAM("Starting controller");
 
@@ -37,12 +37,13 @@ class Controller
       nh_.getParam("controller/Kx", Kx_);
       nh_.getParam("controller/Ky", Ky_);
       nh_.getParam("controller/Kphi", Ktheta_);
+      nh_.getParam("controller/tracker_name", tracker_name_);
 
       const auto queue_size = 100;
       cmd_pub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", queue_size);
-      data_pub_ = nh_.advertise<bootcamp_07_msgs::RolloutData>("rollout_data", queue_size);
+      data_pub_ = nh_.advertise<ros_sockets_msgs::RolloutData>("rollout_data", queue_size);
       setpoint_sub_ = nh_.subscribe("setpoint", queue_size, &Controller::setpointCallback, this);
-      pose_sub_ = nh_.subscribe("vrpn_client_node/turtlebot/pose", queue_size, &Controller::poseCallback, this);
+      pose_sub_ = nh_.subscribe("vrpn_client_node/" + tracker_name_ + "/pose", queue_size, &Controller::poseCallback, this);
       start_time_sub_ = nh_.subscribe("start_time", queue_size, &Controller::startTimeCallback, this);
     }
 
@@ -115,6 +116,7 @@ class Controller
     double cycle_rate_;
     double Kx_, Ky_, Ktheta_;
     bool started_, control_lock_;
+    std::string tracker_name_;
 
     double x_, y_, theta_;
     double x_d_, y_d_, xdot_d_, ydot_d_;
@@ -206,7 +208,7 @@ class Controller
     // Publishes all saved data for the rollout
     void publishRolloutData()
     {
-      bootcamp_07_msgs::RolloutData msg;
+      ros_sockets_msgs::RolloutData msg;
       msg.ts = ts_;
       std::vector<std_msgs::Float64MultiArray> xs;
       std::vector<std_msgs::Float64MultiArray> xds;
