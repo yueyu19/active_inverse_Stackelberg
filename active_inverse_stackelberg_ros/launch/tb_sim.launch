@@ -8,9 +8,9 @@
 
         <!-- Model names of the robots -->
         <arg name="model" default="burger" doc="model type [burger, waffle, waffle_pi]"/>
-        <arg name="tb1"    default="agent1"/>
-        <arg name="tb2"    default="agent2"/>
-        <arg name="tb3"    default="agent3"/>
+        <arg name="bot1"    default="tb1"/>
+        <arg name="bot2"    default="tb2"/>
+        <arg name="bot3"    default="tb3"/>
 
         <!-- Global node parameters -->
         <arg name="SIM_MOCAP_UPDATE_FREQ"  default="100.0"/>
@@ -21,7 +21,6 @@
 
         <!-- Launch nodes for tb1 -->
         <group ns = "$(arg bot1)">
-
             <!-- Start gazebo motion capture simulation, with parameters for this node -->
             <node pkg="ros_sockets" type="gazebo_tracker" name="gazebo_tracker"  output="screen">
                 <param name="tracker_name" value="vrpn_client_node/$(arg bot1)" type="str" />
@@ -32,51 +31,166 @@
             <!-- start the state feedback server -->
             <node pkg="ros_sockets" type="state_feedback" name="state_feedback" output="screen">
                 <param name="tracker_name" value="vrpn_client_node/$(arg bot1)" type="str" />
-                <param name="port" value="42422" type="int" />
+                <param name="port" value="40010" type="int" />
             </node>
 
             <!-- start the experiment time server (for synchronization)  -->
             <node pkg="ros_sockets" type="experiment_time" name="experiment_time" output="screen">
-                <param name="port" value="42423" type="int" />
+                <param name="port" value="40011" type="int" />
             </node>
 
             <!-- start the rollout data server -->
-            <node pkg="jetracer_racing_ros" type="rollout_data" name="rollout_data" output="screen">
-                <param name="port" value="42425" type="int" />
+            <node pkg="ros_sockets" type="rollout_data" name="rollout_data" output="screen">
+                <param name="port" value="40012" type="int" />
             </node>
 
+            <!-- start spline servers -->
             <group ns = "ts">
                 <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
-                    <param name="port" value="42426" type="int" />
+                    <param name="port" value="40013" type="int" />
                     <param name="topic_name" value="ts" type="str" />
                 </node>
             </group>
             <group ns = "coeffs_x">
                 <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
-                    <param name="port" value="42427" type="int" />
+                    <param name="port" value="40014" type="int" />
                     <param name="topic_name" value="coeffs_x" type="str" />
                 </node>
             </group>
             <group ns = "coeffs_y">
                 <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
-                    <param name="port" value="42428" type="int" />
+                    <param name="port" value="40015" type="int" />
                     <param name="topic_name" value="coeffs_y" type="str" />
                 </node>
             </group>
 
             <!-- Start the trajectory generator -->
-            <node pkg="jetracer_racing_ros" type="trajectory_generator" name="trajectory_generator"  output="screen" />
+            <node pkg="active_inverse_stackelberg_ros" type="trajectory_generator" name="trajectory_generator"  output="screen" />
 
             <!-- Start the controller -->
-            <node pkg="jetracer_racing_ros" type="controller" name="controller"  output="screen">
-                <param name="cycle_rate" value="$(CONTROLLER_CYCLE_RATE)" type="double" />
-                <param name="Kx" value="$(K_X)" type="double" />
-                <param name="Ky" value="$(K_Y)" type="double" />
-                <param name="Ktheta" value="$(K_THETA)" type="double" />
+            <node pkg="active_inverse_stackelberg_ros" type="controller" name="controller"  output="screen">
+                <param name="cycle_rate" value="$(arg CONTROLLER_CYCLE_RATE)" type="double" />
+                <param name="Kx" value="$(arg K_X)" type="double" />
+                <param name="Ky" value="$(arg K_Y)" type="double" />
+                <param name="Ktheta" value="$(arg K_THETA)" type="double" />
+                <param name="tracker_name" value="$(arg bot1)" type="str" />
             </node>
-
         </group>
 
+        <!-- Launch nodes for tb2 -->
+        <group ns = "$(arg bot2)">
+            <!-- Start gazebo motion capture simulation, with parameters for this node -->
+            <node pkg="ros_sockets" type="gazebo_tracker" name="gazebo_tracker"  output="screen">
+                <param name="tracker_name" value="vrpn_client_node/$(arg bot2)" type="str" />
+                <param name="model_name" value="turtlebot3_burger" type="str" />
+                <param name="update_frequency" value="$(arg SIM_MOCAP_UPDATE_FREQ)" type="double" />
+            </node>
 
+            <!-- start the state feedback server -->
+            <node pkg="ros_sockets" type="state_feedback" name="state_feedback" output="screen">
+                <param name="tracker_name" value="vrpn_client_node/$(arg bot2)" type="str" />
+                <param name="port" value="40020" type="int" />
+            </node>
+
+            <!-- start the experiment time server (for synchronization)  -->
+            <node pkg="ros_sockets" type="experiment_time" name="experiment_time" output="screen">
+                <param name="port" value="40021" type="int" />
+            </node>
+
+            <!-- start the rollout data server -->
+            <node pkg="ros_sockets" type="rollout_data" name="rollout_data" output="screen">
+                <param name="port" value="40022" type="int" />
+            </node>
+
+            <!-- start spline servers -->
+            <group ns = "ts">
+                <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
+                    <param name="port" value="40023" type="int" />
+                    <param name="topic_name" value="ts" type="str" />
+                </node>
+            </group>
+            <group ns = "coeffs_x">
+                <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
+                    <param name="port" value="40024" type="int" />
+                    <param name="topic_name" value="coeffs_x" type="str" />
+                </node>
+            </group>
+            <group ns = "coeffs_y">
+                <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
+                    <param name="port" value="40025" type="int" />
+                    <param name="topic_name" value="coeffs_y" type="str" />
+                </node>
+            </group>
+
+            <!-- Start the trajectory generator -->
+            <node pkg="active_inverse_stackelberg_ros" type="trajectory_generator" name="trajectory_generator"  output="screen" />
+
+            <!-- Start the controller -->
+            <node pkg="active_inverse_stackelberg_ros" type="controller" name="controller"  output="screen">
+                <param name="cycle_rate" value="$(arg CONTROLLER_CYCLE_RATE)" type="double" />
+                <param name="Kx" value="$(arg K_X)" type="double" />
+                <param name="Ky" value="$(arg K_Y)" type="double" />
+                <param name="Ktheta" value="$(arg K_THETA)" type="double" />
+                <param name="tracker_name" value="$(arg bot2)" type="str" />
+            </node>
+        </group>
+
+        <!-- Launch nodes for tb3 -->
+        <group ns = "$(arg bot3)">
+            <!-- Start gazebo motion capture simulation, with parameters for this node -->
+            <node pkg="ros_sockets" type="gazebo_tracker" name="gazebo_tracker"  output="screen">
+                <param name="tracker_name" value="vrpn_client_node/$(arg bot3)" type="str" />
+                <param name="model_name" value="turtlebot3_burger" type="str" />
+                <param name="update_frequency" value="$(arg SIM_MOCAP_UPDATE_FREQ)" type="double" />
+            </node>
+
+            <!-- start the state feedback server -->
+            <node pkg="ros_sockets" type="state_feedback" name="state_feedback" output="screen">
+                <param name="tracker_name" value="vrpn_client_node/$(arg bot3)" type="str" />
+                <param name="port" value="40030" type="int" />
+            </node>
+
+            <!-- start the experiment time server (for synchronization)  -->
+            <node pkg="ros_sockets" type="experiment_time" name="experiment_time" output="screen">
+                <param name="port" value="40031" type="int" />
+            </node>
+
+            <!-- start the rollout data server -->
+            <node pkg="ros_sockets" type="rollout_data" name="rollout_data" output="screen">
+                <param name="port" value="40032" type="int" />
+            </node>
+
+            <!-- start spline servers -->
+            <group ns = "ts">
+                <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
+                    <param name="port" value="40033" type="int" />
+                    <param name="topic_name" value="ts" type="str" />
+                </node>
+            </group>
+            <group ns = "coeffs_x">
+                <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
+                    <param name="port" value="40034" type="int" />
+                    <param name="topic_name" value="coeffs_x" type="str" />
+                </node>
+            </group>
+            <group ns = "coeffs_y">
+                <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
+                    <param name="port" value="40035" type="int" />
+                    <param name="topic_name" value="coeffs_y" type="str" />
+                </node>
+            </group>
+
+            <!-- Start the trajectory generator -->
+            <node pkg="active_inverse_stackelberg_ros" type="trajectory_generator" name="trajectory_generator"  output="screen" />
+
+            <!-- Start the controller -->
+            <node pkg="active_inverse_stackelberg_ros" type="controller" name="controller"  output="screen">
+                <param name="cycle_rate" value="$(arg CONTROLLER_CYCLE_RATE)" type="double" />
+                <param name="Kx" value="$(arg K_X)" type="double" />
+                <param name="Ky" value="$(arg K_Y)" type="double" />
+                <param name="Ktheta" value="$(arg K_THETA)" type="double" />
+                <param name="tracker_name" value="$(arg bot3)" type="str" />
+            </node>
+        </group>
 
     </launch>

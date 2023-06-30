@@ -107,8 +107,6 @@ auto main(int argc, char **argv) -> int
 
   ros::Rate rate(50.0);
 
-  ROS_INFO_STREAM("Generating trajectory...");
-
   while (ros::ok())
   {
     tg.update();
