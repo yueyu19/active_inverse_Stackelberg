@@ -48,3 +48,16 @@ struct Connections
     tbs::Vector{TurtlebotConnection}
     timing::Connection
 end
+
+struct SplineSegment
+    coeffs_x::Vector{<:Real}
+    coeffs_y::Vector{<:Real}
+    t0::Real
+    tf::Real
+end
+
+struct Spline
+    ts::Vector{<:Real}
+    all_x_coeffs::Matrix{<:Real}
+    all_y_coeffs::Matrix{<:Real}
+end

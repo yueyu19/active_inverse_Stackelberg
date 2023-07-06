@@ -6,7 +6,7 @@ const GET_ROLLOUT_DATA = JSON.json(Dict("action" => "get_rollout_data")) * "\n"
 function open_tb_connections()
     ip = "192.168.1.223"
     feedback_ports = [50010, 50020, 50030]
-    rolloiut_ports = [50012, 50022, 50032]
+    rollout_ports = [50012, 50022, 50032]
     ts_ports = [50013, 50023, 50033]
     coeffs_x_ports = [50014, 50024, 50034]
     coeffs_y_ports = [50015, 50025, 50035]
@@ -19,7 +19,7 @@ function open_tb_connections()
             tbs, 
             TurtlebotConnection(
                 open_connection(ip, feedback_ports[i]),
-                open_connection(ip, rolloiut_ports[i]),
+                open_connection(ip, rollout_ports[i]),
                 open_connection(ip, ts_ports[i]),
                 open_connection(ip, coeffs_x_ports[i]),
                 open_connection(ip, coeffs_y_ports[i])

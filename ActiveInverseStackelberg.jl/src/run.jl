@@ -25,9 +25,9 @@ function run_di_tb()
     connections = open_tb_connections()
 
     x0 = Vector{Real}()     # initial leader states
-    # small initial velocity for each leader so that they "point" the same way
-    # as the actual robot
-    v = 1.01
+    # small initial velocity for each leader so that they initially "point" the
+    # same way as the actual robot
+    v = 0.01
     for i in 1:p.d
         s = state(connections.tbs[i])
         x = s[1]
@@ -36,7 +36,6 @@ function run_di_tb()
         xdot = v*cos(θ)
         ydot = v*sin(θ)
         append!(x0, [x, y, xdot, ydot])
-        display([x, y, xdot, ydot])
     end
     xi0 = zeros(size(dyn.Bf,1))         # initial follower state mean
     initial_conditions = InitialConditions(x0, xi0)
@@ -49,6 +48,9 @@ function run_di_tb()
     )
     xl_opt, xi_opt = solve(inv_stackelberg_problem)
     plot_trajectories(inv_stackelberg_problem, xl_opt, xi_opt)
+
+    splines = make_splines(inv_stackelberg_problem, xl_opt)
+    plot_splines(splines)
 
     close_tb_connections(connections)
 end

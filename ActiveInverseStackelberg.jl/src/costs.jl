@@ -23,7 +23,7 @@ function di_tb_cost(p::Parameters, dyn::Dynamics)
     nf, mf = size(dyn.Bf)
     
     Ql = kron(diagm(ones(d)), diagm([1, 1, 0, 0]))
-    Rl = 1e-1*diagm(ones(ml))
+    Rl = 2.0*diagm(ones(ml))
     
     Qf = zeros(nf, nf, d)
     Rf = zeros(mf, mf, d)
