@@ -44,7 +44,7 @@ class Controller
       data_pub_ = nh_.advertise<ros_sockets_msgs::RolloutData>("rollout_data", queue_size);
       setpoint_sub_ = nh_.subscribe("setpoint", queue_size, &Controller::setpointCallback, this);
       pose_sub_ = nh_.subscribe("vrpn_client_node/" + tracker_name_ + "/pose", queue_size, &Controller::poseCallback, this);
-      start_time_sub_ = nh_.subscribe("start_time", queue_size, &Controller::startTimeCallback, this);
+      start_time_sub_ = nh_.subscribe("/start_time", queue_size, &Controller::startTimeCallback, this);
     }
 
     double cycle_rate(){return cycle_rate_;}

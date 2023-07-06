@@ -19,6 +19,11 @@
     <arg name="K_Y"  default="1.0"/>
     <arg name="K_THETA"  default="1.0"/>     
 
+    <!-- start the experiment time server (for synchronization)  -->
+    <node pkg="ros_sockets" type="experiment_time" name="experiment_time" output="screen">
+        <param name="port" value="40011" type="int" />
+    </node>
+
     <!-- Launch nodes for tb1 -->
     <group ns = "$(arg bot1)">
         <!-- Start gazebo motion capture simulation, with parameters for this node -->
@@ -32,11 +37,6 @@
         <node pkg="ros_sockets" type="state_feedback" name="state_feedback" output="screen">
             <param name="tracker_name" value="vrpn_client_node/$(arg bot1)" type="str" />
             <param name="port" value="40010" type="int" />
-        </node>
-
-        <!-- start the experiment time server (for synchronization)  -->
-        <node pkg="ros_sockets" type="experiment_time" name="experiment_time" output="screen">
-            <param name="port" value="40011" type="int" />
         </node>
 
         <!-- start the rollout data server -->
@@ -92,11 +92,6 @@
             <param name="port" value="40020" type="int" />
         </node>
 
-        <!-- start the experiment time server (for synchronization)  -->
-        <node pkg="ros_sockets" type="experiment_time" name="experiment_time" output="screen">
-            <param name="port" value="40021" type="int" />
-        </node>
-
         <!-- start the rollout data server -->
         <node pkg="ros_sockets" type="rollout_data" name="rollout_data" output="screen">
             <param name="port" value="40022" type="int" />
@@ -148,11 +143,6 @@
         <node pkg="ros_sockets" type="state_feedback" name="state_feedback" output="screen">
             <param name="tracker_name" value="vrpn_client_node/$(arg bot3)" type="str" />
             <param name="port" value="40030" type="int" />
-        </node>
-
-        <!-- start the experiment time server (for synchronization)  -->
-        <node pkg="ros_sockets" type="experiment_time" name="experiment_time" output="screen">
-            <param name="port" value="40031" type="int" />
         </node>
 
         <!-- start the rollout data server -->
