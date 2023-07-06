@@ -13,9 +13,8 @@ function solve(problem::ActiveInverseStackelbergProblem)
     Dn = size(setD, 1)
     d = p.d
 
-    x0 = kron(ones(p.d, 1), zeros(n0))      # initilization of leader's state
-    xi0 = zeros(nf)             # initialization of the follower's state mean
-
+    x0 = problem.initial_conditions.x0[:,:] # initilization of leader's state
+    xi0 = problem.initial_conditions.xi0    # initialization of the follower's state mean
     u_opt = zeros(ml, tau)      # initialize optimal inputs for leader
     objval_opt = Inf            # initialize optimal value in CCP
     objval = Inf                
@@ -68,7 +67,6 @@ function solve(problem::ActiveInverseStackelbergProblem)
             for k = 1:d
                 num = (k-1)*n0
                 @constraints(model, begin
-                    #norm(w[num+1:num+2] - x0[num+1:num+2], Inf) <= p.maxrad
                     (w[num+1] - x0[num+1])^2 <= p.maxrad^2
                     (w[num+2] - x0[num+2])^2 <= p.maxrad^2
                 end)

@@ -34,6 +34,24 @@ function di_dynamics(p::Parameters)
     return Dynamics(Ac0, Bc0, p)
 end
 
+"""Creates the dynamics the double-integrator turtlebot experiment"""
+function di_tb_dynamics(p::Parameters)
+    # double-integrator agent dynamics
+    Ac0 = [
+        0   0   1   0
+        0   0   0   1
+        0   0   0   0
+        0   0   0   0
+    ]
+    Bc0 = [
+        0       0
+        0       0
+        4.4e-3  0
+        0       4.4e-3
+    ]
+    return Dynamics(Ac0, Bc0, p)
+end
+
 function dynprop(El, Fl, Ef, Ff, Ql, Qf, L, x0, xi0, w)
 
     tau = size(El,3)
