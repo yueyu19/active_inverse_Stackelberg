@@ -14,7 +14,7 @@
 
     <!-- Global node parameters -->
     <arg name="SIM_MOCAP_UPDATE_FREQ"  default="100.0"/>
-    <arg name="CONTROLLER_CYCLE_RATE"  default="1.0"/>   
+    <arg name="CONTROLLER_CYCLE_RATE"  default="10.0"/>   
     <arg name="K_X"  default="1.0"/>
     <arg name="K_Y"  default="1.0"/>
     <arg name="K_THETA"  default="1.0"/>     

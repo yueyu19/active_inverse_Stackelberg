@@ -14,7 +14,7 @@ class TrajectoryGenerator
 
       const auto queue_size = 100;
       pub_ = nh_.advertise<std_msgs::Float64MultiArray>("setpoint", queue_size);
-      start_time_sub_ = nh_.subscribe("start_time", queue_size, &TrajectoryGenerator::startTimeCallback, this);
+      start_time_sub_ = nh_.subscribe("/start_time", queue_size, &TrajectoryGenerator::startTimeCallback, this);
       ts_sub_ = nh_.subscribe("ts/ts", queue_size, &TrajectoryGenerator::tsCallback, this);
       coeffs_x_sub_ = nh_.subscribe("coeffs_x/coeffs_x", queue_size, &TrajectoryGenerator::xCoeffsCallback, this);
       coeffs_y_sub_ = nh_.subscribe("coeffs_y/coeffs_y", queue_size, &TrajectoryGenerator::yCoeffsCallback, this);

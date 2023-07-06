@@ -36,14 +36,14 @@ class Controller
       nh_.getParam("controller/cycle_rate", cycle_rate_);
       nh_.getParam("controller/Kx", Kx_);
       nh_.getParam("controller/Ky", Ky_);
-      nh_.getParam("controller/Kphi", Ktheta_);
+      nh_.getParam("controller/Ktheta", Ktheta_);
       nh_.getParam("controller/tracker_name", tracker_name_);
 
       const auto queue_size = 100;
       cmd_pub_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", queue_size);
       data_pub_ = nh_.advertise<ros_sockets_msgs::RolloutData>("rollout_data", queue_size);
       setpoint_sub_ = nh_.subscribe("setpoint", queue_size, &Controller::setpointCallback, this);
-      pose_sub_ = nh_.subscribe("vrpn_client_node/" + tracker_name_ + "/pose", queue_size, &Controller::poseCallback, this);
+      pose_sub_ = nh_.subscribe("/vrpn_client_node/" + tracker_name_ + "/pose", queue_size, &Controller::poseCallback, this);
       start_time_sub_ = nh_.subscribe("/start_time", queue_size, &Controller::startTimeCallback, this);
     }
 
@@ -92,7 +92,7 @@ class Controller
         theta_d += 2*PI;
       else if (abs(theta_ - theta_d) > abs(theta_ - (theta_d - 2*PI)))
         theta_d -= 2*PI;
-      
+
       double omega = -Ktheta_*(theta_-theta_d); 
       omega = clamp(omega, -2.84, 2.84);
 
