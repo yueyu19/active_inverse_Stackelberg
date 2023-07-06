@@ -52,6 +52,40 @@ function state(tb::TurtlebotConnection)
     return [x,y,v,θ]
 end
 
+function start_robots(connections::Connections)
+    @info "Starting robots..."
+    send(connections.timing, START_CMD)
+end
+
+function stop_robots(connections::Connections)
+    @info "Stopping robots"
+    send(connections.timing, STOP_CMD)
+end
+
+"""Sends the GET_TIME_CMD to the timing connection, waits for a response, then
+extracts the elapsed_time from the response."""
+function time_elapsed(connections::Connections)
+    payload = send_receive(connections.timing, GET_TIME_CMD)
+    data = JSON.parse(String(payload))
+    return data["elapsed_time"]
+end
+
+function send_spline_params(tb::TurtlebotConnection, spl::Spline)
+    @info "Sending spline parameters"
+    x_coeffs = vec(spl.all_x_coeffs')
+    y_coeffs = vec(spl.all_y_coeffs')
+    
+    send(tb.ts, JSON.json(Dict("array" => spl.ts)) * "\n")
+    send(tb.coeffs_x, JSON.json(Dict("array" => x_coeffs)) * "\n")
+    send(tb.coeffs_y, JSON.json(Dict("array" => y_coeffs)) * "\n")
+end
+
+function send_splines(connections::Connections, splines::Vector{Spline})
+    for (i, spl) in enumerate(splines)
+        send_spline_params(connections.tbs[i], spl)
+    end
+end
+
 function close_tb_connections(connections::Connections)
     close_connection(connections.timing)
     for tb in connections.tbs

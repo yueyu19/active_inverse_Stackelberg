@@ -52,5 +52,16 @@ function run_di_tb()
     splines = make_splines(inv_stackelberg_problem, xl_opt)
     plot_splines(splines)
 
+    send_splines(connections, splines)
+    sleep(0.5)
+    start_robots(connections)
+    t = 0.0
+    while t < p.T
+        sleep(0.5)
+        t = time_elapsed(connections)
+        @info "Running experiemnt. Time elapsed: $t"
+    end
+    stop_robots(connections)
+
     close_tb_connections(connections)
 end
