@@ -24,8 +24,14 @@ struct Cost
     Rf::Array{<:Real, 3}
 end
 
+struct InitialConditions
+    x0::Vector{<:Real}    # initial of leader state
+    xi0::Vector{<:Real}   # initial follower state mean
+end
+
 Base.@kwdef struct ActiveInverseStackelbergProblem
     parameters::Parameters
     dynamics::Dynamics
     cost::Cost
+    initial_conditions::InitialConditions
 end
