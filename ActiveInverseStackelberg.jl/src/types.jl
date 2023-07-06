@@ -35,3 +35,16 @@ Base.@kwdef struct ActiveInverseStackelbergProblem
     cost::Cost
     initial_conditions::InitialConditions
 end
+
+struct TurtlebotConnection
+    feedback::Connection
+    rollout::Connection
+    ts::Connection
+    coeffs_x::Connection
+    coeffs_y::Connection
+end
+
+struct Connections
+    tbs::Vector{TurtlebotConnection}
+    timing::Connection
+end
