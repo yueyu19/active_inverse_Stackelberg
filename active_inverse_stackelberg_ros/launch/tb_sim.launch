@@ -21,7 +21,7 @@
 
     <!-- start the experiment time server (for synchronization)  -->
     <node pkg="ros_sockets" type="experiment_time" name="experiment_time" output="screen">
-        <param name="port" value="40011" type="int" />
+        <param name="port" value="50011" type="int" />
     </node>
 
     <!-- Launch nodes for tb1 -->
@@ -29,37 +29,37 @@
         <!-- Start gazebo motion capture simulation, with parameters for this node -->
         <node pkg="ros_sockets" type="gazebo_tracker" name="gazebo_tracker"  output="screen">
             <param name="tracker_name" value="vrpn_client_node/$(arg bot1)" type="str" />
-            <param name="model_name" value="turtlebot3_burger" type="str" />
+            <param name="model_name" value="$(arg bot1)" type="str" />
             <param name="update_frequency" value="$(arg SIM_MOCAP_UPDATE_FREQ)" type="double" />
         </node>
 
         <!-- start the state feedback server -->
         <node pkg="ros_sockets" type="state_feedback" name="state_feedback" output="screen">
             <param name="tracker_name" value="vrpn_client_node/$(arg bot1)" type="str" />
-            <param name="port" value="40010" type="int" />
+            <param name="port" value="50010" type="int" />
         </node>
 
         <!-- start the rollout data server -->
         <node pkg="ros_sockets" type="rollout_data" name="rollout_data" output="screen">
-            <param name="port" value="40012" type="int" />
+            <param name="port" value="50012" type="int" />
         </node>
 
         <!-- start spline servers -->
         <group ns = "ts">
             <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
-                <param name="port" value="40013" type="int" />
+                <param name="port" value="50013" type="int" />
                 <param name="topic_name" value="ts" type="str" />
             </node>
         </group>
         <group ns = "coeffs_x">
             <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
-                <param name="port" value="40014" type="int" />
+                <param name="port" value="50014" type="int" />
                 <param name="topic_name" value="coeffs_x" type="str" />
             </node>
         </group>
         <group ns = "coeffs_y">
             <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
-                <param name="port" value="40015" type="int" />
+                <param name="port" value="50015" type="int" />
                 <param name="topic_name" value="coeffs_y" type="str" />
             </node>
         </group>
@@ -82,37 +82,37 @@
         <!-- Start gazebo motion capture simulation, with parameters for this node -->
         <node pkg="ros_sockets" type="gazebo_tracker" name="gazebo_tracker"  output="screen">
             <param name="tracker_name" value="vrpn_client_node/$(arg bot2)" type="str" />
-            <param name="model_name" value="turtlebot3_burger" type="str" />
+            <param name="model_name" value="$(arg bot2)" type="str" />
             <param name="update_frequency" value="$(arg SIM_MOCAP_UPDATE_FREQ)" type="double" />
         </node>
 
         <!-- start the state feedback server -->
         <node pkg="ros_sockets" type="state_feedback" name="state_feedback" output="screen">
             <param name="tracker_name" value="vrpn_client_node/$(arg bot2)" type="str" />
-            <param name="port" value="40020" type="int" />
+            <param name="port" value="50020" type="int" />
         </node>
 
         <!-- start the rollout data server -->
         <node pkg="ros_sockets" type="rollout_data" name="rollout_data" output="screen">
-            <param name="port" value="40022" type="int" />
+            <param name="port" value="50022" type="int" />
         </node>
 
         <!-- start spline servers -->
         <group ns = "ts">
             <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
-                <param name="port" value="40023" type="int" />
+                <param name="port" value="50023" type="int" />
                 <param name="topic_name" value="ts" type="str" />
             </node>
         </group>
         <group ns = "coeffs_x">
             <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
-                <param name="port" value="40024" type="int" />
+                <param name="port" value="50024" type="int" />
                 <param name="topic_name" value="coeffs_x" type="str" />
             </node>
         </group>
         <group ns = "coeffs_y">
             <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
-                <param name="port" value="40025" type="int" />
+                <param name="port" value="50025" type="int" />
                 <param name="topic_name" value="coeffs_y" type="str" />
             </node>
         </group>
@@ -135,37 +135,37 @@
         <!-- Start gazebo motion capture simulation, with parameters for this node -->
         <node pkg="ros_sockets" type="gazebo_tracker" name="gazebo_tracker"  output="screen">
             <param name="tracker_name" value="vrpn_client_node/$(arg bot3)" type="str" />
-            <param name="model_name" value="turtlebot3_burger" type="str" />
+            <param name="model_name" value="$(arg bot3)" type="str" />
             <param name="update_frequency" value="$(arg SIM_MOCAP_UPDATE_FREQ)" type="double" />
         </node>
 
         <!-- start the state feedback server -->
         <node pkg="ros_sockets" type="state_feedback" name="state_feedback" output="screen">
             <param name="tracker_name" value="vrpn_client_node/$(arg bot3)" type="str" />
-            <param name="port" value="40030" type="int" />
+            <param name="port" value="50030" type="int" />
         </node>
 
         <!-- start the rollout data server -->
         <node pkg="ros_sockets" type="rollout_data" name="rollout_data" output="screen">
-            <param name="port" value="40032" type="int" />
+            <param name="port" value="50032" type="int" />
         </node>
 
         <!-- start spline servers -->
         <group ns = "ts">
             <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
-                <param name="port" value="40033" type="int" />
+                <param name="port" value="50033" type="int" />
                 <param name="topic_name" value="ts" type="str" />
             </node>
         </group>
         <group ns = "coeffs_x">
             <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
-                <param name="port" value="40034" type="int" />
+                <param name="port" value="50034" type="int" />
                 <param name="topic_name" value="coeffs_x" type="str" />
             </node>
         </group>
         <group ns = "coeffs_y">
             <node pkg="ros_sockets" type="array_publisher" name="array_publisher" output="screen">
-                <param name="port" value="40035" type="int" />
+                <param name="port" value="50035" type="int" />
                 <param name="topic_name" value="coeffs_y" type="str" />
             </node>
         </group>
