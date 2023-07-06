@@ -61,3 +61,10 @@ struct Spline
     all_x_coeffs::Matrix{<:Real}
     all_y_coeffs::Matrix{<:Real}
 end
+
+struct RolloutData
+    ts::Vector{<:Real}
+    xs::Matrix{<:Real}
+    xds::Matrix{<:Real}
+    us::Matrix{<:Real}
+end

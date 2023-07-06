@@ -96,3 +96,18 @@ function close_tb_connections(connections::Connections)
         close_connection(tb.coeffs_y)
     end
 end
+
+function rollout_data(tb::TurtlebotConnection)
+    payload = send_receive(tb.rollout, GET_ROLLOUT_DATA)
+    data = JSON.parse(String(payload))
+    return RolloutData(
+        convert(Vector{Float64}, data["ts"]),
+        convert(Matrix{Float64}, reduce(hcat,data["xs"])),
+        convert(Matrix{Float64}, reduce(hcat,data["xds"])),
+        convert(Matrix{Float64}, reduce(hcat,data["us"])),
+    )
+end
+
+function all_rollout_data(connections::Connections)
+    return [rollout_data(tb) for tb in connections.tbs]
+end

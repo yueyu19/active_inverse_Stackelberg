@@ -25,7 +25,7 @@ function plot_splines(
 )
     
     fig = Figure(resolution=(1150, 850))
-    ax = Axis(fig[1, 1], aspect=DataAspect(), title ="Planned trajectories", 
+    ax = Axis(fig[1, 1], aspect=DataAspect(), title ="Trajectories", 
                 xlabel="x (m)", ylabel="y (m)", 
                 xticks=-3:0.5:3, yticks=-3:0.5:3)
     colormaps = [:Blues_9, :Greens_9, :Reds_9, :Purples_9, :Oranges_9, :Greys_9]
@@ -43,8 +43,18 @@ function plot_splines(
             vs[i] = norm([xdots[i], ydots[i]])
         end
         
-        s = scatter!(ax, xs, ys, color=vs, colormap=colormaps[j], markersize=6)
+        s = scatter!(ax, xs, ys, color=vs, markersize=6,
+                        colormap=colormaps[j], colorrange = (0.0, 0.30))
         Colorbar(fig[1, 1+j], s, label="Planned Velocity (m/s), Leader $(j)")
+        println("Leader $(j) planned max velocity: $(maximum(vs)) m/s")
+    end
+    display(fig)
+    return fig, ax
+end
+
+function plot_rollouts(fig, ax, rs::Vector{RolloutData})
+    for r in rs
+        scatter!(ax, r.xs[1,:], r.xs[2,:], color=:black, markersize=3)
     end
     display(fig)
 end

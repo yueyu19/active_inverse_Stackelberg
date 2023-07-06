@@ -46,8 +46,8 @@ function di_tb_dynamics(p::Parameters)
     Bc0 = [
         0       0
         0       0
-        4.5e-3  0
-        0       4.5e-3
+        4.4e-3  0
+        0       4.4e-3
     ]
     return Dynamics(Ac0, Bc0, p)
 end

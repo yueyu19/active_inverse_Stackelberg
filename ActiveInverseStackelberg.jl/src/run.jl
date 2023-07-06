@@ -50,7 +50,7 @@ function run_di_tb()
     plot_trajectories(inv_stackelberg_problem, xl_opt, xi_opt)
 
     splines = make_splines(inv_stackelberg_problem, xl_opt)
-    plot_splines(splines)
+    fig, ax = plot_splines(splines)
 
     send_splines(connections, splines)
     sleep(0.5)
@@ -62,6 +62,9 @@ function run_di_tb()
         @info "Running experiemnt. Time elapsed: $t"
     end
     stop_robots(connections)
-
+    sleep(1.0)
+    rs = all_rollout_data(connections)
     close_tb_connections(connections)
+
+    plot_rollouts(fig, ax, rs)
 end
