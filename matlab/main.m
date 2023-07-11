@@ -227,16 +227,23 @@ for k = 1:d
 end
 scatter(xl_opt(1, 1), xl_opt(2, 1), 300, 'ko', 'filled')
 hold off
+xf = zeros(nf, tau+1);
+
+xf(:, 1) = mvnrnd(xi_opt(:, 1, 1), Lambda(:, :, 1, 1))';
+
+for t = 1:tau
+    Sigma = pinv(Rf(:, :, 1)+Bf'*Pf(:, :, t+1, 1)*Bf);
+    mu = -Sigma*Bf'*(Pf(:, :, t+1, 1)*Af*xf(:, t)+qf_opt(:, t+1, 1));
+    xf(:, t+1) = Af*xf(:, t) + Bf*mvnrnd(mu, Sigma)';
+end
 
 figure('Position',[0,0,800,800])
 hold on
+plot(xf(1, :), xf(2, :), '--b', 'LineWidth', 1)
+
 for k = 1:d
-    plot(xi_opt(1, :, k), xi_opt(2, :, k), '--o', 'LineWidth', 3)
+    plot(xi_opt(1, :, k), xi_opt(2, :, k), '-', 'LineWidth', 3)
     scatter(xi_opt(1, end, k), xi_opt(2, end, k), 300, 'k>', 'filled')
     scatter(xi_opt(1, 1, k), xi_opt(2, 1, k), 300, 'ko', 'filled')
 end
-
 hold off
-% set(gca,'Yticklabel',[]) 
-% set(gca,'Xticklabel',[])
-%axis equal
