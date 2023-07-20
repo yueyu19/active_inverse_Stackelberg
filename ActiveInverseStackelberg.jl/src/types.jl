@@ -36,6 +36,14 @@ Base.@kwdef struct ActiveInverseStackelbergProblem
     initial_conditions::InitialConditions
 end
 
+Base.@kwdef struct ActiveInverseStackelbergSolution
+    ql_opt::Array{<:Real, 2}
+    xl_opt::Array{<:Real, 2}
+    qf_opt::Array{<:Real, 3}
+    xi_opt::Array{<:Real, 3}
+    Lambda::Array{<:Real, 4}
+end
+
 struct TurtlebotConnection
     feedback::Connection
     rollout::Connection

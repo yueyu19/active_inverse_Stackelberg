@@ -13,8 +13,8 @@ function run_di()
         cost = cost,
         initial_conditions = initial_conditions
     )
-    xl_opt, xi_opt = solve(inv_stackelberg_problem)
-    plot_trajectories(inv_stackelberg_problem, xl_opt, xi_opt)
+    sol = solve(inv_stackelberg_problem)
+    plot_trajectories(inv_stackelberg_problem, sol)
 end
 
 function run_di_tb()
@@ -46,10 +46,10 @@ function run_di_tb()
         cost = cost,
         initial_conditions = initial_conditions
     )
-    xl_opt, xi_opt = solve(inv_stackelberg_problem)
-    plot_trajectories(inv_stackelberg_problem, xl_opt, xi_opt)
+    sol = solve(inv_stackelberg_problem)
+    plot_trajectories(inv_stackelberg_problem, sol)
 
-    splines = make_splines(inv_stackelberg_problem, xl_opt)
+    splines = make_splines(inv_stackelberg_problem, sol)
     fig, ax = plot_splines(splines)
 
     send_splines(connections, splines)

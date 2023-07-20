@@ -29,7 +29,11 @@ function SplineSegment(t0::Real, tf::Real, s0::Vector{<:Real}, sf::Vector{<:Real
 end
 
 """For each leader, constructs splines between states in `xl`"""
-function make_splines(prob::ActiveInverseStackelbergProblem, xl::Matrix{<:Real})
+function make_splines(
+    prob::ActiveInverseStackelbergProblem,
+    sol::ActiveInverseStackelbergSolution
+)
+    xl = sol.xl_opt
     dt = prob.parameters.dt
     tau = size(xl, 2) # number of time steps
     

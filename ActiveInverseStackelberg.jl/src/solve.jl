@@ -138,8 +138,16 @@ function solve(problem::ActiveInverseStackelbergProblem)
             objval_opt = objval
         end
     end
+    
     ql_opt, xl_opt, qf_opt, xi_opt = dynprop(El, Fl, Ef, Ff, cost.Ql, cost.Qf, L, x0, xi0, w_opt)
-    return xl_opt, xi_opt
+    
+    return ActiveInverseStackelbergSolution(;
+        ql_opt = ql_opt,
+        xl_opt = xl_opt,
+        qf_opt = qf_opt,
+        xi_opt = xi_opt,
+        Lambda = Lambda
+    )
 end
 
 function vol(xi, W)

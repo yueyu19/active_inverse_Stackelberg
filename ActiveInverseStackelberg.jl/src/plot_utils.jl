@@ -1,4 +1,9 @@
-function plot_trajectories(prob::ActiveInverseStackelbergProblem, xl_opt, xi_opt)
+function plot_trajectories(
+    prob::ActiveInverseStackelbergProblem,
+    sol::ActiveInverseStackelbergSolution
+)
+    xl_opt = sol.xl_opt
+    xi_opt = sol.xi_opt
     n0 = size(prob.dynamics.Ac0,1)
     
     fig = Figure(resolution = (800, 800))
