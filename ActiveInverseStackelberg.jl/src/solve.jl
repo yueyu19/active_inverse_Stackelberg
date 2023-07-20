@@ -167,8 +167,8 @@ end
 
 function follower_trajectory(
     prob::ActiveInverseStackelbergProblem,
-    sol::ActiveInverseStackelbergSolution;
-    i=1 # used to select which 
+    sol::ActiveInverseStackelbergSolution
+    ; i::Integer = 1 # used to select which leader is followed
 )
     xi_opt = sol.xi_opt
     qf_opt = sol.qf_opt
@@ -182,10 +182,10 @@ function follower_trajectory(
     tau = size(sol.xi_opt, 2)
     
     xf = zeros(nf, tau)
-    xf[:,1] = rand(MvNormal(xi_opt[:,1,1], Lambda[:,:,1,1]))
+    xf[:,1] = rand(MvNormal(xi_opt[:,1,i], Lambda[:,:,1,i]))
     for t = 1:tau-1
-        Sigma = pinv(Rf[:,:,1] + Bf'*Pf[:,:,t+1,1]*Bf)
-        mu = -Sigma*Bf'*(Pf[:,:,t+1,1]*Af*xf[:,t] + qf_opt[:,t+1,1])
+        Sigma = pinv(Rf[:,:,i] + Bf'*Pf[:,:,t+1,i]*Bf)
+        mu = -Sigma*Bf'*(Pf[:,:,t+1,i]*Af*xf[:,t] + qf_opt[:,t+1,i])
         xf[:,t+1] = Af*xf[:,t] + Bf*rand(MvNormal(mu, Sigma))
     end
     return xf
