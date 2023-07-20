@@ -5,18 +5,22 @@ const GET_ROLLOUT_DATA = JSON.json(Dict("action" => "get_rollout_data")) * "\n"
 
 function open_tb_connections()
     ip = "192.168.1.223"
+    
+    # timing
+    timing_port = 50011
+    timing = open_connection(ip, timing_port)
+    
+    # leaders
     feedback_ports = [50010, 50020, 50030]
     rollout_ports = [50012, 50022, 50032]
     ts_ports = [50013, 50023, 50033]
     coeffs_x_ports = [50014, 50024, 50034]
     coeffs_y_ports = [50015, 50025, 50035]
-    timing_port = 50011
 
-    timing = open_connection(ip, timing_port)
-    tbs = Vector{TurtlebotConnection}()
+    leader_tbs = Vector{TurtlebotConnection}()
     for i in 1:3
         push!(
-            tbs, 
+            leader_tbs, 
             TurtlebotConnection(
                 open_connection(ip, feedback_ports[i]),
                 open_connection(ip, rollout_ports[i]),
@@ -26,7 +30,22 @@ function open_tb_connections()
             )
         )
     end
-    return Connections(tbs, timing)
+
+    # follower
+    feedback = 60010
+    rollout = 60012
+    ts = 60013
+    coeffs_x = 60014
+    coeffs_y = 60015
+    follower_tb = TurtlebotConnection(
+        open_connection(ip, feedback),
+        open_connection(ip, rollout),
+        open_connection(ip, ts),
+        open_connection(ip, coeffs_x),
+        open_connection(ip, coeffs_y)
+    )
+
+    return Connections(leader_tbs, follower_tb, timing)
 end
 
 # Gets the pose and twist and converts it to a state consisting of [x,y,v,θ].
@@ -80,21 +99,32 @@ function send_spline_params(tb::TurtlebotConnection, spl::Spline)
     send(tb.coeffs_y, JSON.json(Dict("array" => y_coeffs)) * "\n")
 end
 
-function send_splines(connections::Connections, splines::Vector{Spline})
+function send_leader_splines(connections::Connections, splines::Vector{Spline})
     for (i, spl) in enumerate(splines)
-        send_spline_params(connections.tbs[i], spl)
+        send_spline_params(connections.leader_tbs[i], spl)
     end
+end
+
+function send_follower_spline(connections::Connections, spl::Spline)
+    send_spline_params(connections.follower_tb, spl)
 end
 
 function close_tb_connections(connections::Connections)
     close_connection(connections.timing)
-    for tb in connections.tbs
+    
+    for tb in connections.leader_tbs
         close_connection(tb.feedback)
         close_connection(tb.rollout)
         close_connection(tb.ts)
         close_connection(tb.coeffs_x)
         close_connection(tb.coeffs_y)
     end
+
+    close_connection(connections.follower_tb.feedback)
+    close_connection(connections.follower_tb.rollout)
+    close_connection(connections.follower_tb.ts)
+    close_connection(connections.follower_tb.coeffs_x)
+    close_connection(connections.follower_tb.coeffs_y)
 end
 
 function rollout_data(tb::TurtlebotConnection)
@@ -109,5 +139,7 @@ function rollout_data(tb::TurtlebotConnection)
 end
 
 function all_rollout_data(connections::Connections)
-    return [rollout_data(tb) for tb in connections.tbs]
+    leader_data = [rollout_data(tb) for tb in connections.leader_tbs]
+    follower_data = rollout_data(connections.follower_tb)
+    return leader_data, follower_data
 end

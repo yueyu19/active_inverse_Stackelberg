@@ -54,7 +54,8 @@ struct TurtlebotConnection
 end
 
 struct Connections
-    tbs::Vector{TurtlebotConnection}
+    leader_tbs::Vector{TurtlebotConnection}
+    follower_tb::TurtlebotConnection
     timing::Connection
 end
 
