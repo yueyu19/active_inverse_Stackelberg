@@ -42,6 +42,7 @@ Base.@kwdef struct ActiveInverseStackelbergSolution
     qf_opt::Array{<:Real, 3}
     xi_opt::Array{<:Real, 3}
     Lambda::Array{<:Real, 4}
+    Pf::Array{<:Real, 4}
 end
 
 struct TurtlebotConnection

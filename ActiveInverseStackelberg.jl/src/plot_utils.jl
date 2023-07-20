@@ -1,6 +1,7 @@
 function plot_trajectories(
     prob::ActiveInverseStackelbergProblem,
     sol::ActiveInverseStackelbergSolution
+    ; xf::Union{Matrix{<:Real}, Nothing} = nothing
 )
     xl_opt = sol.xl_opt
     xi_opt = sol.xi_opt
@@ -21,6 +22,9 @@ function plot_trajectories(
         lines!(ax2, xi_opt[1,:,k], xi_opt[2,:,k])
         scatter!(ax2, xi_opt[1,end,k], xi_opt[2,end,k])
         scatter!(ax2, xi_opt[1,1,k], xi_opt[2,1,k])
+    end
+    if !isnothing(xf)
+        lines!(ax2, xf[1,:], xf[2,:], linestyle=:dash, color=:black, label="Follower")
     end
     display(fig2)
 end

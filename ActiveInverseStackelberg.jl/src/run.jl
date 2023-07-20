@@ -14,7 +14,8 @@ function run_di()
         initial_conditions = initial_conditions
     )
     sol = solve(inv_stackelberg_problem)
-    plot_trajectories(inv_stackelberg_problem, sol)
+    xf = follower_trajectory(inv_stackelberg_problem, sol)
+    plot_trajectories(inv_stackelberg_problem, sol, xf=xf)
 end
 
 function run_di_tb()

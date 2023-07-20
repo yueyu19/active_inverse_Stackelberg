@@ -146,7 +146,8 @@ function solve(problem::ActiveInverseStackelbergProblem)
         xl_opt = xl_opt,
         qf_opt = qf_opt,
         xi_opt = xi_opt,
-        Lambda = Lambda
+        Lambda = Lambda,
+        Pf = Pf
     )
 end
 
@@ -162,4 +163,30 @@ function vol(xi, W)
         end
     end
     return f
+end
+
+function follower_trajectory(
+    prob::ActiveInverseStackelbergProblem,
+    sol::ActiveInverseStackelbergSolution;
+    i=1 # used to select which 
+)
+    xi_opt = sol.xi_opt
+    qf_opt = sol.qf_opt
+    Lambda = sol.Lambda
+    Af = prob.dynamics.Af
+    Bf = prob.dynamics.Bf
+    Pf = sol.Pf
+    Rf = prob.cost.Rf
+    
+    nf = size(prob.dynamics.Bf,1)
+    tau = size(sol.xi_opt, 2)
+    
+    xf = zeros(nf, tau)
+    xf[:,1] = rand(MvNormal(xi_opt[:,1,1], Lambda[:,:,1,1]))
+    for t = 1:tau-1
+        Sigma = pinv(Rf[:,:,1] + Bf'*Pf[:,:,t+1,1]*Bf)
+        mu = -Sigma*Bf'*(Pf[:,:,t+1,1]*Af*xf[:,t] + qf_opt[:,t+1,1])
+        xf[:,t+1] = Af*xf[:,t] + Bf*rand(MvNormal(mu, Sigma))
+    end
+    return xf
 end

@@ -10,6 +10,7 @@ using CairoMakie: Figure, Axis, lines!, scatter!, DataAspect, Colorbar
 using RosSockets
 import JSON
 using Rotations: QuatRotation
+using Distributions
 
 include("types.jl")
 include("params.jl")
