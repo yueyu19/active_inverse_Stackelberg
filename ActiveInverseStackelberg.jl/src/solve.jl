@@ -138,8 +138,17 @@ function solve(problem::ActiveInverseStackelbergProblem)
             objval_opt = objval
         end
     end
+    
     ql_opt, xl_opt, qf_opt, xi_opt = dynprop(El, Fl, Ef, Ff, cost.Ql, cost.Qf, L, x0, xi0, w_opt)
-    return xl_opt, xi_opt
+    
+    return ActiveInverseStackelbergSolution(;
+        ql_opt = ql_opt,
+        xl_opt = xl_opt,
+        qf_opt = qf_opt,
+        xi_opt = xi_opt,
+        Lambda = Lambda,
+        Pf = Pf
+    )
 end
 
 function vol(xi, W)
@@ -154,4 +163,30 @@ function vol(xi, W)
         end
     end
     return f
+end
+
+function follower_trajectory(
+    prob::ActiveInverseStackelbergProblem,
+    sol::ActiveInverseStackelbergSolution
+    ; i::Integer = 1 # used to select which leader is followed
+)
+    xi_opt = sol.xi_opt
+    qf_opt = sol.qf_opt
+    Lambda = sol.Lambda
+    Af = prob.dynamics.Af
+    Bf = prob.dynamics.Bf
+    Pf = sol.Pf
+    Rf = prob.cost.Rf
+    
+    nf = size(prob.dynamics.Bf,1)
+    tau = size(sol.xi_opt, 2)
+    
+    xf = zeros(nf, tau)
+    xf[:,1] = rand(MvNormal(xi_opt[:,1,i], Lambda[:,:,1,i]))
+    for t = 1:tau-1
+        Sigma = pinv(Rf[:,:,i] + Bf'*Pf[:,:,t+1,i]*Bf)
+        mu = -Sigma*Bf'*(Pf[:,:,t+1,i]*Af*xf[:,t] + qf_opt[:,t+1,i])
+        xf[:,t+1] = Af*xf[:,t] + Bf*rand(MvNormal(mu, Sigma))
+    end
+    return xf
 end

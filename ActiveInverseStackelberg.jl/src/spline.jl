@@ -28,8 +28,12 @@ function SplineSegment(t0::Real, tf::Real, s0::Vector{<:Real}, sf::Vector{<:Real
     )
 end
 
-"""For each leader, constructs splines between states in `xl`"""
-function make_splines(prob::ActiveInverseStackelbergProblem, xl::Matrix{<:Real})
+"""For each leader, constructs splines between states in `sol.xl_opt`"""
+function make_splines(
+    prob::ActiveInverseStackelbergProblem,
+    sol::ActiveInverseStackelbergSolution
+)
+    xl = sol.xl_opt
     dt = prob.parameters.dt
     tau = size(xl, 2) # number of time steps
     
@@ -52,6 +56,30 @@ function make_splines(prob::ActiveInverseStackelbergProblem, xl::Matrix{<:Real})
         splines[j] = Spline(ts, all_x_coeffs, all_y_coeffs)
     end
     return splines
+end
+
+"""constructs splines between states in `x`"""
+function make_spline(
+    prob::ActiveInverseStackelbergProblem,
+    x::Matrix{<:Real}
+)
+    dt = prob.parameters.dt
+    tau = size(x, 2) # number of time steps
+    
+    ts = zeros(tau)
+    all_x_coeffs = zeros(tau, 4)
+    all_y_coeffs = zeros(tau, 4)
+    t = 0.0
+    for i in 1:tau-1
+        s = x[:, i]
+        s_next = x[:, i+1]
+        ss = SplineSegment(t, t+dt, s, s_next)
+        all_x_coeffs[i,:] = ss.coeffs_x
+        all_y_coeffs[i,:] = ss.coeffs_y
+        ts[i+1] = ss.tf
+        t += dt
+    end
+    return Spline(ts, all_x_coeffs, all_y_coeffs)
 end
 
 """Evaluate the spline at time t and return [x, y, xdot, ydot]"""

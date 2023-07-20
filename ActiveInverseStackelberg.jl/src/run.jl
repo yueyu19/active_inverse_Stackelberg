@@ -13,8 +13,9 @@ function run_di()
         cost = cost,
         initial_conditions = initial_conditions
     )
-    xl_opt, xi_opt = solve(inv_stackelberg_problem)
-    plot_trajectories(inv_stackelberg_problem, xl_opt, xi_opt)
+    sol = solve(inv_stackelberg_problem)
+    xf = follower_trajectory(inv_stackelberg_problem, sol, i=1)
+    plot_trajectories(inv_stackelberg_problem, sol, xf=xf)
 end
 
 function run_di_tb()
@@ -29,7 +30,7 @@ function run_di_tb()
     # same way as the actual robot
     v = 0.01
     for i in 1:p.d
-        s = state(connections.tbs[i])
+        s = state(connections.leader_tbs[i])
         x = s[1]
         y = s[2]
         θ = s[4]
@@ -37,7 +38,15 @@ function run_di_tb()
         ydot = v*sin(θ)
         append!(x0, [x, y, xdot, ydot])
     end
-    xi0 = zeros(size(dyn.Bf,1))         # initial follower state mean
+    
+    # initial follower state mean
+    xi0 = zeros(size(dyn.Bf,1))         
+    s_follower = state(connections.follower_tb)
+    xi0[1] = s_follower[1]
+    xi0[2] = s_follower[2]
+    xi0[3] = v*cos(s_follower[4])
+    xi0[4] = v*sin(s_follower[4])
+    
     initial_conditions = InitialConditions(x0, xi0)
 
     inv_stackelberg_problem = ActiveInverseStackelbergProblem(;
@@ -46,13 +55,16 @@ function run_di_tb()
         cost = cost,
         initial_conditions = initial_conditions
     )
-    xl_opt, xi_opt = solve(inv_stackelberg_problem)
-    plot_trajectories(inv_stackelberg_problem, xl_opt, xi_opt)
+    sol = solve(inv_stackelberg_problem)
+    xf = follower_trajectory(inv_stackelberg_problem, sol, i=1)
+    plot_trajectories(inv_stackelberg_problem, sol, xf=xf)
 
-    splines = make_splines(inv_stackelberg_problem, xl_opt)
-    fig, ax = plot_splines(splines)
+    leader_splines = make_splines(inv_stackelberg_problem, sol)
+    follower_spline = make_spline(inv_stackelberg_problem, xf)
+    fig, ax = plot_splines(leader_splines, follower_spline)
 
-    send_splines(connections, splines)
+    send_leader_splines(connections, leader_splines)
+    send_follower_spline(connections, follower_spline)
     sleep(0.5)
     start_robots(connections)
     t = 0.0
@@ -63,8 +75,8 @@ function run_di_tb()
     end
     stop_robots(connections)
     sleep(1.0)
-    rs = all_rollout_data(connections)
+    leader_rs, follwer_r = all_rollout_data(connections)
     close_tb_connections(connections)
 
-    plot_rollouts(fig, ax, rs)
+    plot_rollouts(fig, ax, leader_rs, follwer_r)
 end
