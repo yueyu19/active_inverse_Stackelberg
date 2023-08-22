@@ -164,7 +164,7 @@ for MCiter = 1: MCnum
                     num = (k-1)*m0;
 
                     for t = 1:tau
-                        constr = [constr, norm(ul(num+1:num+m0, t), Inf) <= maxu]; % reference state constraints
+                        constr = [constr, norm(ul(num+1:num+m0, t), Inf) <= maxu]; % leader input constraints
                     end
 
                 end
